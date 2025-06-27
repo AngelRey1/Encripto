@@ -81,29 +81,6 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Verificar IP pública antes de arrancar la API
-string allowedPublicIp = "162.220.234.68"; // IP pública de Railway
-string? publicIp = null;
-
-using (var httpClient = new HttpClient())
-{
-    try
-    {
-        publicIp = httpClient.GetStringAsync("https://api.ipify.org").Result.Trim();
-    }
-    catch
-    {
-        Console.WriteLine("No se pudo obtener la IP pública.");
-        return;
-    }
-}
-
-if (publicIp != allowedPublicIp)
-{
-    Console.WriteLine($"La IP pública actual ({publicIp}) no está permitida. La API no se iniciará.");
-    return;
-}
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

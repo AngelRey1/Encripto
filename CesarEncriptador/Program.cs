@@ -102,7 +102,8 @@ app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 
-var allowedIp = "187.155.101.200";
+// Lista de IPs públicas permitidas
+var allowedIps = new[] { "187.155.101.200" };
 
 app.Use(async (context, next) =>
 {
@@ -119,9 +120,8 @@ app.Use(async (context, next) =>
         var xForwardedFor = context.Request.Headers["X-Forwarded-For"].ToString();
         remoteIp = xForwardedFor.Split(',')[0].Trim();
     }
-    // Log temporal para depuración
     context.Response.Headers.Add("X-Debug-RemoteIp", remoteIp ?? "null");
-    if (remoteIp != allowedIp)
+    if (!allowedIps.Contains(remoteIp))
     {
         context.Response.StatusCode = 403;
         await context.Response.WriteAsync($"Acceso denegado: solo se permite la IP autorizada. IP detectada: {remoteIp}");

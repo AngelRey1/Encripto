@@ -103,6 +103,14 @@ app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Configurar Forwarded Headers para obtener la IP real detrás de proxies
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
+    KnownNetworks = { },
+    KnownProxies = { }
+});
+
 // Lista de IPs públicas permitidas
 var allowedIps = new[] { "187.155.101.200" };
 
@@ -116,11 +124,6 @@ app.Use(async (context, next) =>
         return;
     }
     string? remoteIp = context.Connection.RemoteIpAddress?.ToString();
-    if (context.Request.Headers.ContainsKey("X-Forwarded-For"))
-    {
-        var xForwardedFor = context.Request.Headers["X-Forwarded-For"].ToString();
-        remoteIp = xForwardedFor.Split(',')[0].Trim();
-    }
     context.Response.Headers.Add("X-Debug-RemoteIp", remoteIp ?? "null");
     if (!allowedIps.Contains(remoteIp))
     {
@@ -129,15 +132,6 @@ app.Use(async (context, next) =>
         return;
     }
     await next();
-});
-
-// Configurar Forwarded Headers para obtener la IP real detrás de proxies
-app.UseForwardedHeaders(new ForwardedHeadersOptions
-{
-    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
-    // Permitir cualquier proxy (en producción puedes restringir esto a los proxies de Railway)
-    KnownNetworks = { },
-    KnownProxies = { }
 });
 
 app.MapControllers();

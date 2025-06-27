@@ -112,34 +112,43 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
     KnownProxies = { }
 });
 
-// Lista de IPs públicas permitidas (como IPAddress)
-var allowedIps = new[] { IPAddress.Parse("187.155.101.200") };
-
 app.Use(async (context, next) =>
 {
     string? remoteIpString = context.Connection.RemoteIpAddress?.ToString();
+    string? xForwardedFor = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
     context.Response.Headers.Add("X-Debug-RemoteIp", remoteIpString ?? "null");
+    context.Response.Headers.Add("X-Debug-XForwardedFor", xForwardedFor ?? "null");
+
+    // Si X-Forwarded-For existe, revisa si alguna de las IPs es la permitida
+    if (!string.IsNullOrEmpty(xForwardedFor))
+    {
+        var ips = xForwardedFor.Split(',').Select(ip => ip.Trim()).ToList();
+        if (ips.Contains("187.155.101.200"))
+        {
+            await next();
+            return;
+        }
+    }
+
+    // Si no, compara la IP detectada
     if (remoteIpString == null)
     {
         context.Response.StatusCode = 403;
         await context.Response.WriteAsync("No se pudo determinar la IP remota.");
         return;
     }
-    IPAddress remoteIp;
-    if (!IPAddress.TryParse(remoteIpString, out remoteIp))
+    if (!System.Net.IPAddress.TryParse(remoteIpString, out var remoteIp))
     {
         context.Response.StatusCode = 403;
         await context.Response.WriteAsync($"IP remota inválida: {remoteIpString}");
         return;
     }
-    // Si la IP es IPv4-mapeada en IPv6, convertir a IPv4
     if (remoteIp.IsIPv4MappedToIPv6)
         remoteIp = remoteIp.MapToIPv4();
-    bool ipPermitida = allowedIps.Any(ip => ip.Equals(remoteIp));
-    if (!ipPermitida)
+    if (!remoteIp.Equals(System.Net.IPAddress.Parse("187.155.101.200")))
     {
         context.Response.StatusCode = 403;
-        await context.Response.WriteAsync($"Acceso denegado: solo se permite la IP autorizada. IP detectada: {remoteIp}");
+        await context.Response.WriteAsync($"Acceso denegado: solo se permite la IP autorizada. IP detectada: {remoteIp}. X-Forwarded-For: {xForwardedFor}");
         return;
     }
     await next();

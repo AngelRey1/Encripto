@@ -82,7 +82,7 @@ builder.Services.AddCors(options =>
 });
 
 // Verificar IP pública antes de arrancar la API
-string allowedPublicIp = "187.155.101.200";
+string allowedPublicIp = "162.220.234.68"; // IP pública de Railway
 string? publicIp = null;
 
 using (var httpClient = new HttpClient())

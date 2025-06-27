@@ -104,6 +104,20 @@ app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 
+var allowedIp = "187.155.101.200";
+
+app.Use(async (context, next) =>
+{
+    var remoteIp = context.Connection.RemoteIpAddress?.ToString();
+    if (remoteIp != allowedIp)
+    {
+        context.Response.StatusCode = 403;
+        await context.Response.WriteAsync("Acceso denegado: solo se permite la IP autorizada.");
+        return;
+    }
+    await next();
+});
+
 app.MapControllers();
 
 app.Run();

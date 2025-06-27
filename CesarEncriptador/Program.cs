@@ -121,10 +121,12 @@ app.Use(async (context, next) =>
         var xForwardedFor = context.Request.Headers["X-Forwarded-For"].ToString();
         remoteIp = xForwardedFor.Split(',')[0].Trim();
     }
+    // Log temporal para depuración
+    context.Response.Headers.Add("X-Debug-RemoteIp", remoteIp ?? "null");
     if (remoteIp != allowedIp)
     {
         context.Response.StatusCode = 403;
-        await context.Response.WriteAsync("Acceso denegado: solo se permite la IP autorizada.");
+        await context.Response.WriteAsync($"Acceso denegado: solo se permite la IP autorizada. IP detectada: {remoteIp}");
         return;
     }
     await next();

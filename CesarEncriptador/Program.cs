@@ -3,6 +3,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using CesarEncriptador.Services;
+using System.Net.Http;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -79,6 +80,29 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader();
     });
 });
+
+// Verificar IP pública antes de arrancar la API
+string allowedPublicIp = "187.155.101.200";
+string? publicIp = null;
+
+using (var httpClient = new HttpClient())
+{
+    try
+    {
+        publicIp = httpClient.GetStringAsync("https://api.ipify.org").Result.Trim();
+    }
+    catch
+    {
+        Console.WriteLine("No se pudo obtener la IP pública.");
+        return;
+    }
+}
+
+if (publicIp != allowedPublicIp)
+{
+    Console.WriteLine($"La IP pública actual ({publicIp}) no está permitida. La API no se iniciará.");
+    return;
+}
 
 var app = builder.Build();
 

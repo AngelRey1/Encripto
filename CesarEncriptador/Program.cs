@@ -114,41 +114,28 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 
 app.Use(async (context, next) =>
 {
+    string allowedIp = "187.155.101.200";
     string? remoteIpString = context.Connection.RemoteIpAddress?.ToString();
     string? xForwardedFor = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+
+    // Analizar todas las IPs posibles
+    var ipsToCheck = new List<string>();
+    if (!string.IsNullOrEmpty(xForwardedFor))
+        ipsToCheck.AddRange(xForwardedFor.Split(',').Select(ip => ip.Trim()));
+    if (!string.IsNullOrEmpty(remoteIpString))
+        ipsToCheck.Add(remoteIpString);
+
+    // Para depuración, mostrar todas las IPs analizadas
+    context.Response.Headers.Add("X-Debug-IPs-Checked", string.Join("|", ipsToCheck));
     context.Response.Headers.Add("X-Debug-RemoteIp", remoteIpString ?? "null");
     context.Response.Headers.Add("X-Debug-XForwardedFor", xForwardedFor ?? "null");
 
-    // Si X-Forwarded-For existe, revisa si alguna de las IPs es la permitida
-    if (!string.IsNullOrEmpty(xForwardedFor))
-    {
-        var ips = xForwardedFor.Split(',').Select(ip => ip.Trim()).ToList();
-        if (ips.Contains("187.155.101.200"))
-        {
-            await next();
-            return;
-        }
-    }
-
-    // Si no, compara la IP detectada
-    if (remoteIpString == null)
+    // Permitir solo si alguna IP coincide exactamente con la IP permitida
+    bool ipPermitida = ipsToCheck.Any(ip => ip == allowedIp || ip == $"::ffff:{allowedIp}");
+    if (!ipPermitida)
     {
         context.Response.StatusCode = 403;
-        await context.Response.WriteAsync("No se pudo determinar la IP remota.");
-        return;
-    }
-    if (!System.Net.IPAddress.TryParse(remoteIpString, out var remoteIp))
-    {
-        context.Response.StatusCode = 403;
-        await context.Response.WriteAsync($"IP remota inválida: {remoteIpString}");
-        return;
-    }
-    if (remoteIp.IsIPv4MappedToIPv6)
-        remoteIp = remoteIp.MapToIPv4();
-    if (!remoteIp.Equals(System.Net.IPAddress.Parse("187.155.101.200")))
-    {
-        context.Response.StatusCode = 403;
-        await context.Response.WriteAsync($"Acceso denegado: solo se permite la IP autorizada. IP detectada: {remoteIp}. X-Forwarded-For: {xForwardedFor}");
+        await context.Response.WriteAsync($"Acceso denegado: solo se permite la IP autorizada. IPs analizadas: {string.Join(", ", ipsToCheck)}");
         return;
     }
     await next();

@@ -121,7 +121,7 @@ namespace CesarEncriptador.Controllers
 
     public class CesarRequest
     {
-        public required string Mensaje { get; set; }
+        public string Mensaje { get; set; }
         public int Desplazamiento { get; set; }
     }
 } 

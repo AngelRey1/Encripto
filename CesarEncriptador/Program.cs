@@ -83,17 +83,15 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// Habilitar Swagger siempre
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Cesar Encriptador API v1");
-        c.RoutePrefix = string.Empty; // Hacer que Swagger esté disponible en la raíz
-        c.DocumentTitle = "Cesar Encriptador API";
-        c.DefaultModelsExpandDepth(-1); // Ocultar modelos por defecto
-    });
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Cesar Encriptador API v1");
+    c.RoutePrefix = string.Empty; // Hacer que Swagger esté disponible en la raíz
+    c.DocumentTitle = "Cesar Encriptador API";
+    c.DefaultModelsExpandDepth(-1); // Ocultar modelos por defecto
+});
 
 app.UseHttpsRedirection();
 

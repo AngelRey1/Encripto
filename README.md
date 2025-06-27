@@ -20,8 +20,8 @@ API REST para cifrado y descifrado usando el algoritmo de César con autenticaci
 
 1. **Clona el repositorio**:
    ```bash
-   git clone https://github.com/tu-usuario/CesarEncriptador.git
-   cd CesarEncriptador
+   git clone https://github.com/AngelRey1/Encripto.git
+   cd Encripto
    ```
 
 2. **Restaura las dependencias**:
@@ -220,8 +220,8 @@ Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más det
 
 ## 👨‍💻 Autor
 
-**Tu Nombre**
-- GitHub: [@tu-usuario](https://github.com/tu-usuario)
+**Angel Rey**
+- GitHub: [@AngelRey1](https://github.com/AngelRey1)
 
 ## 🙏 Agradecimientos
 

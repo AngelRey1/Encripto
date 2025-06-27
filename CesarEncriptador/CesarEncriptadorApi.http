@@ -1,0 +1,6 @@
+@CesarEncriptadorApi_HostAddress = http://localhost:5204
+
+GET {{CesarEncriptadorApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -3,6 +3,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using CesarEncriptador.Services;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -128,6 +129,15 @@ app.Use(async (context, next) =>
         return;
     }
     await next();
+});
+
+// Configurar Forwarded Headers para obtener la IP real detrás de proxies
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
+    // Permitir cualquier proxy (en producción puedes restringir esto a los proxies de Railway)
+    KnownNetworks = { },
+    KnownProxies = { }
 });
 
 app.MapControllers();

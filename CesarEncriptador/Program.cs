@@ -4,6 +4,7 @@ using Microsoft.OpenApi.Models;
 using System.Text;
 using CesarEncriptador.Services;
 using Microsoft.AspNetCore.HttpOverrides;
+using System.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -111,15 +112,31 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
     KnownProxies = { }
 });
 
-// Lista de IPs públicas permitidas
-var allowedIps = new[] { "187.155.101.200" };
+// Lista de IPs públicas permitidas (como IPAddress)
+var allowedIps = new[] { IPAddress.Parse("187.155.101.200") };
 
 app.Use(async (context, next) =>
 {
-    // Ya no se permite ninguna excepción para Swagger ni la raíz
-    string? remoteIp = context.Connection.RemoteIpAddress?.ToString();
-    context.Response.Headers.Add("X-Debug-RemoteIp", remoteIp ?? "null");
-    if (!allowedIps.Contains(remoteIp))
+    string? remoteIpString = context.Connection.RemoteIpAddress?.ToString();
+    context.Response.Headers.Add("X-Debug-RemoteIp", remoteIpString ?? "null");
+    if (remoteIpString == null)
+    {
+        context.Response.StatusCode = 403;
+        await context.Response.WriteAsync("No se pudo determinar la IP remota.");
+        return;
+    }
+    IPAddress remoteIp;
+    if (!IPAddress.TryParse(remoteIpString, out remoteIp))
+    {
+        context.Response.StatusCode = 403;
+        await context.Response.WriteAsync($"IP remota inválida: {remoteIpString}");
+        return;
+    }
+    // Si la IP es IPv4-mapeada en IPv6, convertir a IPv4
+    if (remoteIp.IsIPv4MappedToIPv6)
+        remoteIp = remoteIp.MapToIPv4();
+    bool ipPermitida = allowedIps.Any(ip => ip.Equals(remoteIp));
+    if (!ipPermitida)
     {
         context.Response.StatusCode = 403;
         await context.Response.WriteAsync($"Acceso denegado: solo se permite la IP autorizada. IP detectada: {remoteIp}");

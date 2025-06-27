@@ -108,7 +108,13 @@ var allowedIp = "187.155.101.200";
 
 app.Use(async (context, next) =>
 {
-    var remoteIp = context.Connection.RemoteIpAddress?.ToString();
+    string? remoteIp = context.Connection.RemoteIpAddress?.ToString();
+    if (context.Request.Headers.ContainsKey("X-Forwarded-For"))
+    {
+        var xForwardedFor = context.Request.Headers["X-Forwarded-For"].ToString();
+        // Puede haber varias IPs separadas por coma, tomamos la primera
+        remoteIp = xForwardedFor.Split(',')[0].Trim();
+    }
     if (remoteIp != allowedIp)
     {
         context.Response.StatusCode = 403;

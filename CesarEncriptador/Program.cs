@@ -116,13 +116,7 @@ var allowedIps = new[] { "187.155.101.200" };
 
 app.Use(async (context, next) =>
 {
-    var path = context.Request.Path.Value?.ToLower();
-    // Permitir acceso libre a Swagger y la raíz
-    if (path == "/" || path.StartsWith("/swagger"))
-    {
-        await next();
-        return;
-    }
+    // Ya no se permite ninguna excepción para Swagger ni la raíz
     string? remoteIp = context.Connection.RemoteIpAddress?.ToString();
     context.Response.Headers.Add("X-Debug-RemoteIp", remoteIp ?? "null");
     if (!allowedIps.Contains(remoteIp))

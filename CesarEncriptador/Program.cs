@@ -106,7 +106,4 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Redirigir la raíz a la interfaz web
-app.MapGet("/", () => Results.Redirect("/index.html"));
-
 app.Run();
